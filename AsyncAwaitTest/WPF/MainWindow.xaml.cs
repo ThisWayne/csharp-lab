@@ -32,10 +32,9 @@ namespace WPF
 
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
+            Debug.WriteLine("===== WPF =====");
             AsyncAwaitTestClass testClass = new AsyncAwaitTestClass();
             await testClass.TestStart();
-
-            Console.WriteLine($"After Main, ManagedThreadId: {Thread.CurrentThread.ManagedThreadId}, IsThreadPoolThread: {Thread.CurrentThread.IsThreadPoolThread}");
         }
     }
 }

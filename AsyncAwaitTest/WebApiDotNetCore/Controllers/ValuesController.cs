@@ -19,6 +19,8 @@ namespace DotNetCore.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<string>>> Get()
         {
+            Debug.WriteLine("===== .Net Core Web API =====");
+
             AsyncAwaitTestClass testClass = new AsyncAwaitTestClass();
             await testClass.TestStart();
             return new string[] { "value1", "value2" };

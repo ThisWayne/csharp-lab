@@ -18,6 +18,8 @@ namespace DotNetFramework.Controllers
         [HttpGet]
         public async Task<IEnumerable<string>> Get()
         {
+            Debug.WriteLine("===== .Net Framework Web API =====");
+
             AsyncAwaitTestClass testClass = new AsyncAwaitTestClass();
             await testClass.TestStart();
 

@@ -14,6 +14,8 @@ namespace ConsoleApp
     {
         static async Task Main(string[] args)
         {
+            Debug.WriteLine("===== .Net Framework Console App =====");
+
             AsyncAwaitTestClass testClass = new AsyncAwaitTestClass();
             await testClass.TestStart();
 
