@@ -53,10 +53,7 @@ namespace TestClassLibrary
         private async Task RunTest1()
         {
             Debug.WriteLine("===== Test 1 =====");
-
-            // 不是一看到await methodAsync()，當前thread就跳回到caller
-            // methodAsync裡面的code還是會由當前thread執行
-            // 可以看到1.跟ReturnFinishedTaskAsync裡面的2.都是同一個thread ID
+            
             Debug.WriteLine("1. === Before ReturnFinishedTaskAsync ===");
             PrintInfos();
             await ReturnFinishedTaskAsync();
@@ -75,23 +72,12 @@ namespace TestClassLibrary
         {
             Debug.WriteLine("===== Test 2 =====");
 
-            // 加不加ConfigureAwait(false)後面執行緒會是誰？main/worker/iocp thread？
             await RunTest2_1();
             await RunTest2_2();
-
-            // 加ConfigureAwait(false)後面一定會是iocp thread？
             await RunTest2_3();
-
-            // 連續兩個await呼叫有加ConfigureAwait(false)
             await RunTest2_4();
-
-            // 如果先呼叫一個await有加ConfigureAwait(false)，然後再呼叫一個await不加ConfigureAwait(false)？
             await RunTest2_5();
-
-            // 裡面的有加，外面的沒加ConfigureAwait(false)
             await RunTest2_6();
-
-            // 外面的有加，裡面的沒加ConfigureAwait(false)
             await RunTest2_7();
 
             Debug.WriteLine("===== Test 2 End =====");
@@ -104,10 +90,10 @@ namespace TestClassLibrary
             Debug.WriteLine("1. === Before httpClient.GetStringAsync ===");
             PrintInfos();
 
-            await httpClient.GetStringAsync(url); // 不加ConfigureAwait(false)
+            await httpClient.GetStringAsync(url); // without ConfigureAwait(false)
 
             Debug.WriteLine("2. === After httpClient.GetStringAsync  ===");
-            PrintInfos(); //1.跟2.是同一個thread ID
+            PrintInfos();
         }
 
         private async Task RunTest2_2()
@@ -117,10 +103,10 @@ namespace TestClassLibrary
             Debug.WriteLine("1. === Before httpClient.GetStringAsync ===");
             PrintInfos();
 
-            await httpClient.GetStringAsync(url).ConfigureAwait(false); // 加ConfigureAwait(false)
+            await httpClient.GetStringAsync(url).ConfigureAwait(false); // with ConfigureAwait(false)
 
             Debug.WriteLine("2. === After httpClient.GetStringAsync ConfigureAwait(false) ===");
-            PrintInfos(); //1.跟2.會是不同thread ID
+            PrintInfos(); // 1. and 2. would be different thread ID
         }
 
         private async Task RunTest2_3()
@@ -130,16 +116,10 @@ namespace TestClassLibrary
             Debug.WriteLine("1. === Before ReturnFinishedTaskAsync ===");
             PrintInfos();
 
-            await ReturnFinishedTaskAsync().ConfigureAwait(false); // 加ConfigureAwait(false)
+            await ReturnFinishedTaskAsync().ConfigureAwait(false); // with ConfigureAwait(false)
 
             Debug.WriteLine("3. === After ReturnFinishedTaskAsync ConfigureAwait(false) ===");
             PrintInfos();
-
-            // 一般如果是IO bound的程式有加ConfigureAwait(false)之後的code會由iocp thread執行
-            // 但如果await裡面的task很快就完成了
-            // 本來要準備走await的機制
-            // 去檢查task的狀態的時候發現task已經完成了
-            // 就會跳過await機制直接由當前thread繼續執行
         }
 
         private async Task RunTest2_4()
@@ -149,12 +129,12 @@ namespace TestClassLibrary
             Debug.WriteLine("1. === Before httpClient.GetStringAsync ===");
             PrintInfos();
 
-            await httpClient.GetStringAsync(url).ConfigureAwait(false);
+            await httpClient.GetStringAsync(url).ConfigureAwait(false); // with ConfigureAwait(false)
 
             Debug.WriteLine("2. === After httpClient.GetStringAsync ConfigureAwait(false) ===");
             PrintInfos();
 
-            await httpClient.GetStringAsync(url).ConfigureAwait(false);
+            await httpClient.GetStringAsync(url).ConfigureAwait(false); // with ConfigureAwait(false)
 
             Debug.WriteLine("3. === After httpClient.GetStringAsync ConfigureAwait(false) ===");
             PrintInfos();
@@ -167,12 +147,12 @@ namespace TestClassLibrary
             Debug.WriteLine("1. === Before httpClient.GetStringAsync ===");
             PrintInfos();
 
-            await httpClient.GetStringAsync(url).ConfigureAwait(false); // 加ConfigureAwait(false)
+            await httpClient.GetStringAsync(url).ConfigureAwait(false); // with ConfigureAwait(false)
 
             Debug.WriteLine("2. === After httpClient.GetStringAsync ConfigureAwait(false) ===");
             PrintInfos();
 
-            await httpClient.GetStringAsync(url);
+            await httpClient.GetStringAsync(url); // without ConfigureAwait(false)
 
             Debug.WriteLine("3. === After httpClient.GetStringAsync ===");
             PrintInfos();
@@ -215,10 +195,6 @@ namespace TestClassLibrary
 
             Debug.WriteLine("4. === After MethodWithoutConfigureAwaitFalseInsideAsync ConfigureAwait(false) ===");
             PrintInfos();
-
-            // 因為裡面的沒加ConfigureAwait(false)，所以await後續接手會是main thread
-            // 裡面最後執行完的是main thread，外面的有加ConfigureAwait(false)
-            // 不交由main thread執行ConfigureAwait(false)的後續，所以worker thread接手
         }
 
         private async Task<string> MethodWithoutConfigureAwaitFalseInsideAsync()
